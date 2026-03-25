@@ -31,11 +31,13 @@ class MainWindow(QMainWindow):
 		self.btn_ventas = QPushButton("Ventas")
 		self.btn_inventario = QPushButton("Inventario")
 		self.btn_usuarios = QPushButton("Usuarios")
+		self.btn_categorias = QPushButton("Categorias")
 		self.btn_salir = QPushButton("Cerrar sesión")
 
 		menu.addWidget(self.btn_ventas)
 		menu.addWidget(self.btn_inventario)
 		menu.addWidget(self.btn_usuarios)
+		menu.addWidget(self.btn_categorias)
 		menu.addStretch(1)
 		menu.addWidget(self.btn_salir)
 
@@ -49,16 +51,22 @@ class MainWindow(QMainWindow):
 
 		self.page_inventario = QLabel("Pantalla: Inventario")
 		self.page_inventario.setAlignment(Qt.AlignCenter)
+		self.page_categorias = QLabel("Pantalla: Categorias")
+		self.page_categorias.setAlignment(Qt.AlignCenter)
 
 		self.page_usuarios = UsuariosWindow(self.usuario_actual)
+
+
 
 		self.stack.addWidget(self.page_ventas)
 		self.stack.addWidget(self.page_inventario)
 		self.stack.addWidget(self.page_usuarios)
+		self.stack.addWidget(self.page_categorias)
 
 		self.btn_ventas.clicked.connect(lambda: self.stack.setCurrentWidget(self.page_ventas))
 		self.btn_inventario.clicked.connect(lambda: self.stack.setCurrentWidget(self.page_inventario))
 		self.btn_usuarios.clicked.connect(lambda: self.stack.setCurrentWidget(self.page_usuarios))
+		self.btn_categorias.clicked.connect(lambda: self.stack.setCurrentWidget(self.page_categorias))
 		self.btn_salir.clicked.connect(self.cerrar_sesion)
 
 		self.aplicar_permisos()
