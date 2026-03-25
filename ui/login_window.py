@@ -6,6 +6,7 @@ from Logica.servicios.Servicios_usuarios.auth_usuarios import login
 from ui.main_window import MainWindow
 
 
+
 class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
