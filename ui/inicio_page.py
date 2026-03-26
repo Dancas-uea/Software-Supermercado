@@ -1,20 +1,27 @@
-from PySide6.QtWidgets import QWidget, QGraphicsColorizeEffect, QVBoxLayout, QHBoxLayout, QGridLayout, QPushButton, \
-    QLabel, QFrame, QScrollArea
+import os
+import webbrowser
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QPushButton,
+    QLabel, QFrame, QScrollArea, QApplication
+)
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon
-import os
 
 
 class TarjetaFormal(QPushButton):
     """Clase personalizada para los botones grandes corporativos (Corregida)"""
+
     def __init__(self, texto, color_hex, icono_path):
         super().__init__()
         self.setText(texto)
         self.setFixedSize(220, 110)
         self.setCursor(Qt.PointingHandCursor)
         self.color_base = color_hex
-        self.setIcon(QIcon(icono_path))
-        self.setIconSize(QSize(40, 40))
+
+        # Manejo de iconos (asegurando que la ruta exista)
+        if os.path.exists(icono_path):
+            self.setIcon(QIcon(icono_path))
+            self.setIconSize(QSize(40, 40))
 
         self.setStyleSheet(f"""
             QPushButton {{
@@ -40,8 +47,6 @@ class TarjetaFormal(QPushButton):
             }}
         """)
 
-
-import webbrowser # No olvides importar esto al inicio del archivo
 
 class TarjetaNovedad(QFrame):
     def __init__(self, titulo, fecha, descripcion, texto_link=None, url=None):
@@ -75,7 +80,7 @@ class TarjetaNovedad(QFrame):
         lbl_desc.setStyleSheet("color: #7f8c8d; font-size: 12px; border: none;")
         layout.addWidget(lbl_desc)
 
-        # LINK (Solo se crea si hay texto de link)
+        # LINK
         if texto_link and url:
             btn_link = QPushButton(texto_link)
             btn_link.setCursor(Qt.PointingHandCursor)
@@ -95,47 +100,35 @@ class TarjetaNovedad(QFrame):
                     text-decoration: underline;
                 }
             """)
-            # Conectamos el clic para abrir la web
             btn_link.clicked.connect(lambda: webbrowser.open(url))
             layout.addWidget(btn_link)
 
 
-import os
-import webbrowser
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QPushButton,
-    QLabel, QFrame, QScrollArea, QApplication
-)
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon
-
-
 class InicioPage(QWidget):
-    def __init__(self):
+    def __init__(self, sesion: dict = None):  # Recibe la sesión para los permisos
         super().__init__()
-        # 1. Fondo gris formal para toda la página
         self.setStyleSheet("background-color: #f5f6fa;")
 
-        # Creamos el layout principal horizontal
-        layout = QHBoxLayout(self)
+        # Si no se pasa sesión (para pruebas), creamos una por defecto
+        self.usuario_actual = sesion if sesion else {"username": "Invitado", "rol": "cajero"}
 
-        # AJUSTE DE POSICIÓN: Bajamos el contenido y damos margen derecho
+        layout = QHBoxLayout(self)
         layout.setContentsMargins(5, 80, 40, 40)
         layout.setSpacing(30)
 
-        # --- CREACIÓN DE CONTENEDORES (Primero se crean, luego se añaden al layout) ---
-
         # 1. LADO IZQUIERDO (Menú y Tarjetas)
         izq_layout = QVBoxLayout()
-        izq_layout.addSpacing(20)  # Espacio extra arriba para bajar el título
+        izq_layout.addSpacing(20)
 
         # --- ENCABEZADO CON LOGO ---
         header_main_layout = QHBoxLayout()
         header_main_layout.setAlignment(Qt.AlignLeft)
 
         lbl_logo_principal = QLabel()
-        logo_path = os.path.join("../assets/icons/logo.png")
-        lbl_logo_principal.setPixmap(QIcon(logo_path).pixmap(QSize(40, 40)))
+        logo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../assets/icons/logo.png"))
+        if os.path.exists(logo_path):
+            lbl_logo_principal.setPixmap(QIcon(logo_path).pixmap(QSize(40, 40)))
+
         lbl_logo_principal.setStyleSheet("border: none; background: transparent;")
 
         lbl_titulo_main = QLabel("Menú Principal")
@@ -145,7 +138,8 @@ class InicioPage(QWidget):
         header_main_layout.addWidget(lbl_titulo_main)
         izq_layout.addLayout(header_main_layout)
 
-        lbl_bienvenida = QLabel("Bienvenido al sistema de gestión AsmoRoot Studio")
+        # Mensaje de bienvenida personalizado
+        lbl_bienvenida = QLabel(f"Bienvenido al sistema de gestión AsmoRoot Studio")
         lbl_bienvenida.setStyleSheet("font-size: 14px; color: gray; font-weight: 500; background: transparent;")
         izq_layout.addWidget(lbl_bienvenida)
         izq_layout.addSpacing(25)
@@ -154,23 +148,43 @@ class InicioPage(QWidget):
         grid = QGridLayout()
         grid.setSpacing(20)
 
+        # Calculamos la ruta base una sola vez para no repetir código
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
         self.menu_items = {
-            "nueva_venta": TarjetaFormal("Nueva Venta", "#27ae60", "../assets/icons/ventas.svg"),
-            "productos": TarjetaFormal("Productos", "#008080", "../assets/icons/inventario.svg"),
-            "categorias": TarjetaFormal("Categorías", "#00acc1", "../assets/icons/categorias.svg"),
-            "registros": TarjetaFormal("Registros", "#2196f3", "../assets/icons/registros.svg"),
-            "resumenes": TarjetaFormal("Resúmenes", "#1e88e5", "../assets/icons/resumenes.svg"),
+            "nueva_venta": TarjetaFormal("Nueva Venta", "#27ae60",
+                                         os.path.join(base_path, "../assets/icons/ventas.svg")),
+            "productos": TarjetaFormal("Productos", "#008080",
+                                       os.path.join(base_path, "../assets/icons/inventario.svg")),
+            "categorias": TarjetaFormal("Categorías", "#00acc1",
+                                        os.path.join(base_path, "../assets/icons/categorias.svg")),
+            "usuarios": TarjetaFormal("Usuarios", "#00acc1", os.path.join(base_path, "../assets/icons/usuarios.svg")),
+            "registros": TarjetaFormal("Registros", "#2196f3",
+                                       os.path.join(base_path, "../assets/icons/registros.svg")),
+            "resumenes": TarjetaFormal("Resúmenes", "#1e88e5",
+                                       os.path.join(base_path, "../assets/icons/resumenes.svg")),
             "ingresar_productos": TarjetaFormal("Ingresar Producto", "#43a047",
-                                                "../assets/icons/ingresar producto.svg"),
-            "configuracion": TarjetaFormal("Configuración", "#ffb300", "../assets/icons/configuracion.svg")
+                                                os.path.join(base_path, "../assets/icons/ingresar producto.svg")),
+            "configuracion": TarjetaFormal("Configuración", "#ffb300",
+                                           os.path.join(base_path, "../assets/icons/configuracion.svg"))
         }
 
+        # --- LÓGICA DE PERMISOS ---
+        rol = self.usuario_actual.get("rol", "").lower()
+        if rol not in ["creador", "admin"]:
+            self.menu_items["usuarios"].hide()
+
+        if rol == "cajero":
+            self.menu_items["configuracion"].hide()
+
+        # --- ACOMODO DEL GRID ---
         grid.addWidget(self.menu_items["nueva_venta"], 0, 0)
         grid.addWidget(self.menu_items["productos"], 0, 1)
         grid.addWidget(self.menu_items["categorias"], 0, 2)
-        grid.addWidget(self.menu_items["registros"], 1, 0)
-        grid.addWidget(self.menu_items["resumenes"], 1, 1)
-        grid.addWidget(self.menu_items["ingresar_productos"], 1, 2)
+        grid.addWidget(self.menu_items["usuarios"], 1, 0)
+        grid.addWidget(self.menu_items["registros"], 1, 1)
+        grid.addWidget(self.menu_items["resumenes"], 1, 2)
+        grid.addWidget(self.menu_items["ingresar_productos"], 2, 0)
         grid.addWidget(self.menu_items["configuracion"], 2, 1)
 
         izq_layout.addLayout(grid)
@@ -179,38 +193,37 @@ class InicioPage(QWidget):
         # 2. SECCIÓN DERECHA (Novedades)
         container_novedades = QFrame()
         container_novedades.setFixedWidth(380)
-        container_novedades.setStyleSheet("""
-            QFrame {
-                background-color: #ffffff;
-                border: 1px solid #dfe4ea;
-                border-radius: 15px;
-            }
-        """)
+        container_novedades.setStyleSheet(
+            "QFrame { background-color: white; border: 1px solid #dfe4ea; border-radius: 15px; }")
 
         main_nov_layout = QVBoxLayout(container_novedades)
         main_nov_layout.setContentsMargins(15, 20, 15, 20)
 
-        # Encabezado Novedades
         header_layout = QHBoxLayout()
         header_layout.setAlignment(Qt.AlignLeft)
+
         lbl_icono = QLabel()
-        icon_path = os.path.join("../assets/icons/campana.svg")
-        lbl_icono.setPixmap(QIcon(icon_path).pixmap(QSize(24, 24)))
-        lbl_icono.setStyleSheet("border: none; background: transparent;")
+        # Se ajusta la ruta para que sea absoluta y se fuerza el renderizado del SVG
+        icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../assets/icons/campana.svg"))
+        if os.path.exists(icon_path):
+            lbl_icono.setPixmap(QIcon(icon_path).pixmap(QSize(24, 24)))
+            lbl_icono.setStyleSheet("border: none; background: transparent;")
+            lbl_icono.setScaledContents(True)  # Ajusta el contenido al label
+            lbl_icono.setFixedSize(24, 24)  # Fija el tamaño para que no se deforme
+
         lbl_header = QLabel("Novedades")
-        lbl_header.setStyleSheet(
-            "font-size: 18px; font-weight: bold; color: #2f3640; border: none; background: transparent;")
+        lbl_header.setStyleSheet("font-size: 18px; font-weight: bold; color: #2f3640; border: none;")
         header_layout.addWidget(lbl_icono)
+        header_layout.addSpacing(10)  # Espacio entre el icono y el texto
         header_layout.addWidget(lbl_header)
         main_nov_layout.addLayout(header_layout)
 
-        linea_titulo = QFrame()
-        linea_titulo.setFixedHeight(2)
-        linea_titulo.setStyleSheet("background-color: #f1f2f6; border: none;")
-        main_nov_layout.addWidget(linea_titulo)
+        linea = QFrame();
+        linea.setFixedHeight(2);
+        linea.setStyleSheet("background-color: #f1f2f6; border: none;")
+        main_nov_layout.addWidget(linea)
         main_nov_layout.addSpacing(10)
 
-        # Área de Scroll
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("border: none; background: transparent;")
@@ -220,41 +233,28 @@ class InicioPage(QWidget):
         self.nov_list_layout.setSpacing(10)
         self.nov_list_layout.setAlignment(Qt.AlignTop)
 
-        # Datos de noticias
         mis_noticias = [
-            {"titulo": "Encuesta para usuarios", "fecha": "23 MAR 2026",
-             "desc": "¿Cómo ha sido tu experiencia con AsmoRoot Studio? Ayúdanos a mejorar.",
-             "link_txt": "Contestar encuesta aquí...", "url": "https://google.com"},
-            {"titulo": "Nueva Versión 1.4.0", "fecha": "25 MAR 2026",
-             "desc": "Se optimizaron las animaciones de las tarjetas y se corrigió el error de iconos.",
-             "link_txt": "Ver notas de actualización", "url": "https://github.com"},
-            {"titulo": "Aviso de Mantenimiento", "fecha": "10 MAR 2026",
-             "desc": "El servidor de base de datos estará en mantenimiento el domingo.", "link_txt": None, "url": None}
+            {"titulo": "Encuesta para usuarios", "fecha": "23 MAR 2026", "desc": "¿Cómo ha sido tu experiencia?",
+             "link_txt": "Contestar aquí...", "url": "https://google.com"},
+            {"titulo": "Nueva Versión 1.4.0", "fecha": "25 MAR 2026", "desc": "Optimización de tarjetas.",
+             "link_txt": "Ver notas", "url": "https://github.com"},
+            {"titulo": "Aviso Mantenimiento", "fecha": "10 MAR 2026", "desc": "Servidor en mantenimiento domingo.",
+             "link_txt": None, "url": None}
         ]
 
         for n in mis_noticias:
-            noticia = TarjetaNovedad(n["titulo"], n["fecha"], n["desc"], n.get("link_txt"), n.get("url"))
-            self.nov_list_layout.addWidget(noticia)
+            self.nov_list_layout.addWidget(
+                TarjetaNovedad(n["titulo"], n["fecha"], n["desc"], n.get("link_txt"), n.get("url")))
 
         scroll.setWidget(scroll_content)
         main_nov_layout.addWidget(scroll)
 
-        # --- ENSAMBLAJE FINAL PARA MOVER A LA IZQUIERDA ---
-
-        # 1. Quitamos el Stretch del principio o lo ponemos con valor 0
-        layout.addSpacing(60)  # Un pequeño margen fijo para que no toque el borde físico
-
-        # 2. Añadimos el Menú (ahora aparecerá primero a la izquierda)
+        # ENSAMBLAJE FINAL
+        layout.addSpacing(60)
         layout.addLayout(izq_layout, 3)
-
-        # 3. Añadimos el Stretch AQUÍ (Esto empujará el menú a la izquierda y las novedades a la derecha)
-        layout.addStretch(1)  # <-- Este espacio vacío ahora queda en el centro
-
-        # 4. Espacio y Novedades
+        layout.addStretch(1)
         layout.addSpacing(50)
         layout.addWidget(container_novedades, 1)
-
-        # 5. Margen final
         layout.addSpacing(20)
 
 
@@ -262,7 +262,9 @@ if __name__ == "__main__":
     import sys
 
     app = QApplication(sys.argv)
-    ventana_prueba = InicioPage()
-    ventana_prueba.resize(1200, 800)
-    ventana_prueba.show()
+    # Prueba con rol admin para ver todas las opciones
+    prueba_sesion = {"username": "Carlos", "rol": "admin"}
+    ventana = InicioPage(prueba_sesion)
+    ventana.resize(1200, 800)
+    ventana.show()
     sys.exit(app.exec())

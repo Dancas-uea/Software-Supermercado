@@ -2,7 +2,7 @@ import bcrypt
 
 from Configuracion.Ajustes.db import cursor_db
 
-ROLES_VALIDOS = {"creador", "gerente", "Admin", "cajero", "inventario"}
+ROLES_VALIDOS = {"creador", "gerente", "admin", "cajero", "inventario"}
 
 
 def crear_usuario(username: str, password: str, rol: str) -> int:

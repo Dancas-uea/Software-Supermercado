@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QTableWidget, QTableWidgetItem, QMessageBox,
-    QInputDialog, QLineEdit, QLabel
+    QInputDialog, QLineEdit, QLabel, QHeaderView
 )
 from PySide6.QtCore import Qt
 
@@ -16,14 +16,20 @@ class UsuariosWindow(QWidget):
         self.sesion = sesion or {}
 
         self.setWindowTitle("Usuarios")
-        self.setMinimumWidth(700)
+        self.setMinimumWidth(800)
+        self.setMinimumHeight(600)
+        self.setStyleSheet("background-color: #f5f6fa;")  # Fondo de ventana claro
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(10)
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
 
+        # --- TITULO ---
         lbl = QLabel(f"Usuarios — sesión: {self.sesion.get('username')} ({self.sesion.get('rol')})")
+        lbl.setStyleSheet("color: #2c3e50; font-size: 16px; font-weight: bold; background: transparent;")
         layout.addWidget(lbl)
 
+        # --- BOTONES ---
         btns = QHBoxLayout()
         self.btn_refrescar = QPushButton("Refrescar")
         self.btn_agregar = QPushButton("Agregar")
@@ -31,19 +37,98 @@ class UsuariosWindow(QWidget):
         self.btn_password = QPushButton("Cambiar clave")
         self.btn_rol = QPushButton("Cambiar rol")
 
-        btns.addWidget(self.btn_refrescar)
-        btns.addWidget(self.btn_agregar)
-        btns.addWidget(self.btn_eliminar)
-        btns.addWidget(self.btn_password)
-        btns.addWidget(self.btn_rol)
+        estilo_botones = """
+            QPushButton {
+                background-color: #ffffff;
+                color: #2c3e50;
+                border: 1px solid #dfe4ea;
+                border-radius: 5px;
+                padding: 8px 15px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #f1f2f6;
+                border: 1px solid #3498db;
+            }
+            QPushButton:pressed {
+                background-color: #dfe4ea;
+            }
+            QPushButton:disabled {
+                color: #bdc3c7;
+                background-color: #f5f6fa;
+            }
+        """
+
+        # Aplicamos el estilo y agregamos al layout
+        for btn in [self.btn_refrescar, self.btn_agregar, self.btn_eliminar, self.btn_password, self.btn_rol]:
+            btn.setStyleSheet(estilo_botones)
+            btn.setCursor(Qt.PointingHandCursor)
+            btns.addWidget(btn)
+
         layout.addLayout(btns)
 
+        # --- TABLA ---
         self.table = QTableWidget(0, 4)
-        self.table.setHorizontalHeaderLabels(["id", "username", "rol", "fecha_creacion"])
+        self.table.setHorizontalHeaderLabels(["ID", "Username", "Rol", "Fecha Creación"])
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
-        layout.addWidget(self.table)
 
+        # Estilo para forzar que el texto sea oscuro y los encabezados visibles
+        self.table.setStyleSheet("""
+            QTableWidget {
+                background-color: white;
+                color: #2f3640;
+                gridline-color: #f1f2f6;
+                border: 1px solid #dfe4ea;
+                border-radius: 4px;
+            }
+            QHeaderView::section {
+                background-color: #2c3e50;
+                color: white;
+                padding: 6px;
+                font-weight: bold;
+                border: none;
+            }
+            QTableWidget::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+        """)
+        #--- ESTILO GLOBAL PARA DIÁLOGOS(QMessageBoxe QInputDialog) ---
+        self.setStyleSheet("""
+                    QWidget {
+                        background-color: #f5f6fa;
+                    }
+                    QDialog QLabel {
+                        color: #2c3e50; /* Texto de la pregunta en oscuro */
+                        font-size: 14px;
+                    }
+                    QDialog QPushButton {
+                        background-color: #3498db;
+                        color: white;
+                        border-radius: 4px;
+                        padding: 5px 15px;
+                        min-width: 60px;
+                        font-weight: bold;
+                    }
+                    QDialog QPushButton:hover {
+                        background-color: #2980b9;
+                    }
+                    QDialog QLineEdit {
+                        background-color: white;
+                        color: #2c3e50;
+                        border: 1px solid #dfe4ea;
+                        border-radius: 4px;
+                        padding: 5px;
+                    }
+                """)
+        # Ajustes de columnas para que no se vea vacía
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        # Agregamos la tabla con factor 1 para que se expanda y no desaparezca
+        layout.addWidget(self.table, 1)
+
+        # --- CONEXIONES ---
         self.btn_refrescar.clicked.connect(self.cargar)
         self.btn_agregar.clicked.connect(self.on_agregar)
         self.btn_eliminar.clicked.connect(self.on_eliminar)
