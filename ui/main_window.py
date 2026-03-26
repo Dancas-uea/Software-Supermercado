@@ -1,9 +1,12 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
-    QStackedWidget, QMessageBox
+    QStackedWidget, QMessageBox, QFrame, QScrollArea
 )
-from PySide6.QtCore import Qt
+
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QIcon
 from ui.usuarios_windows import UsuariosWindow
+from ui.inicio_page import InicioPage
 
 
 class MainWindow(QMainWindow):
